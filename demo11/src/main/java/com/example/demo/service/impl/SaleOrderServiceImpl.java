@@ -54,6 +54,7 @@ public class SaleOrderServiceImpl implements SaleOrderService {
            float giam = 1;
            if(!ObjectUtils.isEmpty(voucher)){
                giam = 1-(float)voucher.getPersen()/100;
+               saleOrder.setVoucher(voucher);
            }
            saleOrder.setAmount(utils.aggregate(carts).get("amount1")*giam);
            System.out.println("OK0");

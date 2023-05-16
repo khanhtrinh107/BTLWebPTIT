@@ -1,5 +1,7 @@
 package com.example.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,7 +23,9 @@ public class Voucher {
     private String code;
     private int persen;
     @OneToMany(fetch = FetchType.EAGER , cascade = CascadeType.ALL , mappedBy = "voucher")
+    @JsonIgnore
     private Set<SaleOrder> saleOrders;
     @OneToMany(fetch = FetchType.EAGER , cascade =  CascadeType.ALL , mappedBy = "voucher")
+    @JsonIgnore
     private Set<User_Voucher> user_vouchers;
 }
