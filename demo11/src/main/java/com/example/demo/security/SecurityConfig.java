@@ -1,6 +1,7 @@
 package com.example.demo.security;
 
 //import com.example.demo.jwt.JwtAuthenticationFilter;
+import com.example.demo.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -21,10 +22,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-//    @Bean
-//    public JwtAuthenticationFilter jwtAuthenticationFilter(){
-//        return new JwtAuthenticationFilter();
-//    }
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter(){
+        return new JwtAuthenticationFilter();
+    }
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
@@ -52,12 +53,11 @@ public class SecurityConfig {
                 .failureUrl("/login?error=ok")
                         .defaultSuccessUrl("/view/shop")
                                 .permitAll();
-
         http.logout().logoutSuccessUrl("/login?logout=ok").permitAll();
         http.exceptionHandling().accessDeniedPage("/view/forbidden");
         http.authenticationProvider(authenticationProvider());
         http.authorizeHttpRequests().anyRequest().permitAll();
-        //http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }
