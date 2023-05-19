@@ -330,7 +330,7 @@
     console.log(email)
     console.log(firstName)
     console.log(lastName)
-    fetch('http://localhost:8080/home',{
+    fetch('http://localhost:8080/api/signup',{
       method : "post",
       headers : {
         "Content-Type" : "application/json"
@@ -348,7 +348,7 @@
               return response.json()
             })
             .then((data) => {
-                if(data.userId !== undefined){
+                if(data.username !== undefined){
                   window.location.href = "/view/shop";
                 }
                 else if (data.message !== undefined){

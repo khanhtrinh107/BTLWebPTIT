@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/comment")
+@CrossOrigin(origins = "*")
 //@PreAuthorize("isAuthenticated()")
 public class CommentController {
     @Autowired

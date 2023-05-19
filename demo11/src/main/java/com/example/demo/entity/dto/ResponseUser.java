@@ -14,6 +14,8 @@ import java.util.List;
 @NoArgsConstructor
 public class ResponseUser {
     private String token;
+    private String refreshToken;
     private String username;
+    private int status;
     private List<GrantedAuthority> roles;
 }

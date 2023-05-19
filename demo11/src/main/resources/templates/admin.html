@@ -387,7 +387,7 @@
                     <div class="modal-dialog" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title">Edit Product</h5>
+                                <h5 class="modal-title">Edit Book</h5>
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
@@ -922,9 +922,7 @@
         if(currentProduct.price !== price){
             formData.append('price',price);
         }
-        if(currentProduct.category.categoryName !== cate){
             formData.append('category',cate);
-        }
         if(currentProduct.description !== description){
             formData.append('description',description);
         }
@@ -993,6 +991,7 @@
             loadUser(currentUserPage)
         })
     })
+    document.getElementById("editProduct").disabled = true
 </script>
 </body>
 

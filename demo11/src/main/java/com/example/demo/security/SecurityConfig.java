@@ -47,8 +47,9 @@ public class SecurityConfig {
     }
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf().disable();
-        http.formLogin().loginPage("/login")
+        http.cors()
+                .and()
+                .csrf().disable().formLogin().loginPage("/login")
                 .failureForwardUrl("/login?error=ok")
                 .failureUrl("/login?error=ok")
                         .defaultSuccessUrl("/view/shop")

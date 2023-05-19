@@ -7,6 +7,7 @@ import com.example.demo.exception.ObjectExistedException;
 import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.jwt.JwtTokenProvider;
 import com.example.demo.security.UserDetail;
+import com.example.demo.service.RefreshTokenService;
 import com.example.demo.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -21,8 +23,13 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+
+@CrossOrigin(origins = "*")
 @RestController
 public class UserController {
+    @Autowired
+    private RefreshTokenService refreshTokenService;
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
     @Autowired
@@ -36,20 +43,68 @@ public class UserController {
     }
     @PostMapping("/api/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginRequest loginRequest){
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername() , loginRequest.getPassword()));
-        UserDetail user = (UserDetail) authentication.getPrincipal();
-        System.out.println("ok");
-        String token = jwtTokenProvider.generateToken(user);
-        if(ObjectUtils.isEmpty(user)){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        System.out.println("check");
+        try {
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername() , loginRequest.getPassword()));
+            UserDetail user = (UserDetail) authentication.getPrincipal();
+            System.out.println("ok");
+            String token = jwtTokenProvider.generateToken(user);
+            RefreshToken refreshToken = new RefreshToken();
+            refreshToken.setUser(user.getUser());
+            System.out.println(user);
+            String refToken = jwtTokenProvider.refreshToken(user , refreshToken.getId());
+            refreshToken.setRfToken(refToken);
+            refreshTokenService.save(refreshToken);
+            return new ResponseEntity<>(new ResponseUser(token , refToken, user.getUsername(), 200, (List<GrantedAuthority>) user.getAuthorities() ),HttpStatus.OK);
         }
-        else{
-            return new ResponseEntity<>(new ResponseUser(token, user.getUsername(), (List<GrantedAuthority>) user.getAuthorities()),HttpStatus.OK);
+        catch (Exception e){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+
         }
+
     }
-    @PostMapping("/home")
+
+    @PostMapping("/api/signup")
     public ResponseEntity<?> create(@RequestBody @Valid SignUpRequest sign) throws ObjectExistedException {
-        return new ResponseEntity<>(userService.create(sign), HttpStatus.CREATED);
+        User user = userService.create(sign);
+        UserDetail userDetail = new UserDetail();
+        userDetail.setUser(user);
+        String token = jwtTokenProvider.generateToken(userDetail);
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUser(user);
+        String refToken = jwtTokenProvider.refreshToken(userDetail , refreshToken.getId());
+        refreshToken.setRfToken(refToken);
+        refreshTokenService.save(refreshToken);
+        return new ResponseEntity<>(new ResponseUser(token , refToken, user.getUsername() , 200, (List<GrantedAuthority>) userDetail.getAuthorities()),HttpStatus.OK);
+    }
+
+
+    @PostMapping("/api/logout")
+    public ResponseEntity<?> logout(@RequestBody @Valid TokenDto tokenDto){
+        if(jwtTokenProvider.validateToken(tokenDto.getRefreshToken())  && !ObjectUtils.isEmpty(refreshTokenService.findByToken(tokenDto.getRefreshToken()))){
+            User user = refreshTokenService.findUserByToken(tokenDto.getRefreshToken());
+            refreshTokenService.deleteAllByUserId(user.getUserId());
+            return new ResponseEntity<>(new CartMessage("Logout") , HttpStatus.OK);
+        }
+        throw new BadCredentialsException("invalid token");
+    }
+
+    @PostMapping("/api/access-token")
+    public ResponseEntity<?> accessToken(@RequestBody @Valid TokenDto tokenDto){
+        String refToken = tokenDto.getRefreshToken();
+        if(jwtTokenProvider.validateToken(refToken)  && !ObjectUtils.isEmpty(refreshTokenService.findByToken(refToken))){
+            RefreshToken refreshToken = new RefreshToken();
+            User user = refreshTokenService.findUserByToken(refToken);
+            refreshToken.setUser(user);
+            UserDetail userDetail = new UserDetail(user);
+            String token = jwtTokenProvider.generateToken(userDetail);
+            String rfToken = jwtTokenProvider.refreshToken(userDetail , refreshToken.getId());
+            refreshToken.setRfToken(rfToken);
+            refreshTokenService.save(refreshToken);
+            refreshTokenService.deleteByRfToken(refToken);
+            return new ResponseEntity<>(new ResponseUser(token , rfToken, user.getUsername(),200, (List<GrantedAuthority>) userDetail.getAuthorities()),HttpStatus.OK);
+        }
+        throw new BadCredentialsException("invalid token");
     }
 
     @GetMapping("/user")
@@ -75,5 +130,4 @@ public class UserController {
     public String editor(){
         return "Editor page";
     }
-
 }

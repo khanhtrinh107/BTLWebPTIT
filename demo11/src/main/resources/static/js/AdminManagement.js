@@ -196,16 +196,16 @@ function getProductById(id){
             document.getElementById('editPrice').value = data.price
             document.getElementById('editProductDescription').value = data.description
             let option = document.getElementById('editCategorySelection');
+            const img = document.getElementById('editImg');
+            img.setAttribute('src', `${data.image}`);
             const category = data.category.categoryName;
             console.log(category)
-            for(let i = 0 ; i < option.options.length ; i++){
-                if(option.options[i].value === category){
+            for(let i = 0 ; i < option.options.length ; i++) {
+                if (option.options[i].value === category) {
                     option.selectedIndex = i;
                     break;
                 }
             }
-            const img = document.getElementById('editImg');
-            img.setAttribute('src', `${data.image}`);
             document.getElementById('editProduct').disabled = true;
 
         })
